@@ -1,0 +1,428 @@
+@import url(https://fonts.googleapis.com/css?family=Montserrat:100,200,300,regular,500,600,700,800,900,100italic,200italic,300italic,italic,500italic,600italic,700italic,800italic,900italic);
+body{
+    font-family: Montserrat;
+    color: white;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    background-image: url('./img.jpg');
+}
+:root {
+    --accentColor: white;/* rgba(66, 66, 66, 0.5); */
+    --middleColor: transperent;/* rgba(92, 92, 92, 0.5); */
+    --lightColor: transperent;/* rgba(105, 105, 105, 0.5); */
+    --borderColor: white;
+    --borderSize: 0.15rem;
+    --blurSize: 0.3rem;
+    --buttonColor: #330a6a;
+}
+<<<<<<< HEAD
+=======
+
+>>>>>>> a5d7544 (Maui app added)
+.noteContainer{
+    background-color: transparent;
+    backdrop-filter: blur(var(--blurSize));
+    border: var(--borderSize) solid var(--borderColor);
+    border-radius: 1rem;
+    transition: 1s;
+    display: block;
+    margin: 0% 2%;
+}
+.title{
+    padding-top: 1%;
+    color: #fff;
+    display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-bottom: 0.5%;
+}
+.noteDescription{
+    color: #fff;
+    transition: 1s;
+    font-size: 0;
+<<<<<<< HEAD
+    padding-left: 5%;
+=======
+    /* padding-left: 5%; */
+>>>>>>> a5d7544 (Maui app added)
+    
+}
+.error{
+    background-color: red;
+    padding: 1vw 1vw 1vw 1vw;
+<<<<<<< HEAD
+    display: flex;
+=======
+    display: none;
+>>>>>>> a5d7544 (Maui app added)
+    justify-content: center;
+    border-radius: 2vw;
+    transform: translate(150vw, 0px);
+    transition: 0.8s;
+    z-index: 20;
+}
+.a {
+    text-decoration: none;
+    color: var(--buttonColor);
+}
+
+#newNoteBtn{
+<<<<<<< HEAD
+    width: 10vh;
+    height: 10vh;
+    text-align: center;
+    border-radius: 10vh;
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    margin: 1%;
+=======
+    text-align: center;
+    border-radius: 10vh;
+    position: fixed;
+    bottom: 1vh;
+    right: 1vh;
+>>>>>>> a5d7544 (Maui app added)
+    color: var(--buttonColor);
+    background-color: var(--accentColor);/* rgba(66, 66, 66, 0.5); */
+    border: var(--borderSize) solid var(--borderColor);
+    font-size: 3rem;
+    cursor: pointer;
+    font-weight:bolder;
+    backdrop-filter: blur(var(--blurSize));
+}
+#editBtn {
+<<<<<<< HEAD
+    width: 7vw;
+=======
+>>>>>>> a5d7544 (Maui app added)
+    padding: 1vh;
+    text-align: center;
+    text-justify:auto;
+    border-radius: 10vh;
+    border: none;
+    position: fixed;
+    bottom: 1vh;
+    right: 1vw;
+    color: var(--buttonColor);
+    background-color: var(--accentColor);
+    cursor: pointer;
+    font-weight: bold;
+    border: var(--borderSize) solid var(--borderColor);
+    backdrop-filter: blur(var(--blurSize));
+}
+
+#deleteBtn {
+<<<<<<< HEAD
+    width: 7vw;
+=======
+>>>>>>> a5d7544 (Maui app added)
+    padding: 1vh;
+    text-align: center;
+    text-justify:auto;
+    border-radius: 10vh;
+    border: none;
+    position: fixed;
+    bottom: 10vh;
+    right: 1vw;
+    color: var(--buttonColor);
+    background-color: var(--accentColor);
+    cursor: pointer;
+    font-weight: bold;
+    border: var(--borderSize) solid var(--borderColor);
+    backdrop-filter: blur(var(--blurSize));
+}
+.visible{
+    padding-bottom: 2.5%;
+    padding-right: 5%;
+    font-size: medium;
+}
+.overfhidden{
+    overflow: hidden;
+}
+.loginContainer{
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-direction: column;
+	height: 100vh;
+    overflow: hidden;
+}
+.inputLogin{
+    background-color: var(--middleColor);
+    border: var(--borderSize) solid var(--borderColor);
+    color: white;
+    height: 5vh;
+    width: 15vw;
+    border-radius: 5vh;
+    padding-left: 3%;
+    margin-top: 2%;
+}
+.submitLogin{
+    background-color: white;
+<<<<<<< HEAD
+    height: 4vh;
+=======
+>>>>>>> a5d7544 (Maui app added)
+    border-radius: 4vh;
+    border: 0;
+    text-align: center;
+    margin: 1%;
+<<<<<<< HEAD
+    width: 7vw;
+=======
+>>>>>>> a5d7544 (Maui app added)
+    color: var(--buttonColor);
+}
+
+.login{
+    text-align: center;
+    border: var(--borderSize) solid var(--borderColor);
+    padding: 2.5%;
+    backdrop-filter: blur(var(--blurSize));
+    border-radius: 3rem;
+}
+
+.loginLabel {
+    margin-top: 1%;
+    font-size: 1.25rem;
+}
+input::placeholder{
+    color: var(--accentColor);
+    padding-left: 2%;
+}
+
+.popup {
+<<<<<<< HEAD
+    width: 100vw;
+    height: 100vh;
+=======
+    width: 100%;
+    height: 100%;
+>>>>>>> a5d7544 (Maui app added)
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.8);
+    position: absolute;
+    top: 0;
+    left: 0;
+<<<<<<< HEAD
+    overflow-y: auto;
+    overflow-x: none;
+    transition: 0.8s;
+    transform: translate(0px, -100%);
+    margin: 0;
+    padding: 0;
+    z-index: 101;
+    backdrop-filter: blur(var(--blurSize));
+    cursor: pointer;
+}
+.open {
+=======
+    /* overflow-y: auto;
+    overflow-x: none; */
+    transition: 0.8s;
+    transform: translate(0px, -100%);
+    /* margin: 0;
+    padding: 0; */
+    z-index: 101;
+    backdrop-filter: blur(var(--blurSize));
+    cursor: pointer;
+    overflow: hidden;
+}
+.open {
+    display: flex;
+>>>>>>> a5d7544 (Maui app added)
+    transform: translate(0px, 0px);
+}
+.popupContainer {
+    display: flex;
+width: 80vw;
+height: 90vh;
+background-color: var(--middleColor);
+border: var(--borderSize) solid var(--borderColor);
+border-radius: 10vh;
+align-items: center;
+justify-content: center;
+cursor: default;
+<<<<<<< HEAD
+=======
+overflow: hidden;
+>>>>>>> a5d7544 (Maui app added)
+}
+#popupTitle {
+    width: 75vw;
+    background-color: var(--middleColor);
+    border: none;
+    height: 5vh;
+    font-size: 2rem;
+    color: white;
+    opacity: 1;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+    cursor: default;
+}
+#popupDescription {
+    width: 75vw;
+    height: 70vh;
+    margin-top: 2vh;
+    font-family: Montserrat;
+    resize: none;
+    background-color: var(--middleColor);
+    border: none;
+    color: white;
+    opacity: 1;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+    cursor: default;
+}
+ header {
+    /* background-color: var(--middleColor); */
+    background: transparent;
+    backdrop-filter: blur(20px);
+    border: 0.15rem solid white;
+    position: sticky;
+    top: 0;
+<<<<<<< HEAD
+    width: 100vw;
+=======
+    /* width: 99.6vw; */
+>>>>>>> a5d7544 (Maui app added)
+    height: 7vh;
+    display: flex;
+    align-items: center;
+    z-index: 100;
+<<<<<<< HEAD
+=======
+    margin: 0;
+>>>>>>> a5d7544 (Maui app added)
+    margin-bottom: 2%;
+ }
+ #userNameDiv{
+    margin-left: auto;
+    padding-right: 2%;
+    cursor: pointer;
+ }
+ #userMenu {
+<<<<<<< HEAD
+    background-color: var(--accentColor);
+    color: var(--buttonColor);
+=======
+    margin-top: -2%;
+    background-color: var(--accentColor);
+    text-align: center;
+    color: var(--buttonColor);
+    display: block;
+>>>>>>> a5d7544 (Maui app added)
+    position: absolute;
+    right: 0;
+    padding: 2%;
+    border-bottom-left-radius: 2rem;
+    transition: 0.8s;
+    transform: translate(0px, -200%);
+    z-index: 10;
+ }
+ .hand{
+    cursor: pointer;
+ }
+ .bg {
+    position:fixed;
+    top:0;
+    left:0;
+    height:100%;
+    width:100%;
+    z-index: -10;
+<<<<<<< HEAD
+ }
+=======
+ }
+
+ #close {
+    transform: rotate(45deg);
+    color: var(--accentColor);
+    font-size: 4rem;
+    position: absolute;
+    top: 0;
+    right: 5%;
+    visibility: hidden;
+ }
+
+ #registerLink {
+    color: white; 
+    font-size: 0.7rem; 
+    text-decoration: none;
+ }
+
+ #fogot {
+    color: white; 
+    font-size: 0.7rem; 
+    text-decoration: none; 
+    opacity: 0; 
+    display: none;
+ }
+
+ @media (max-width: 426px) {
+    #newNoteBtn {
+        font-size: 3rem;
+        bottom: 2vh;
+        right: 2vh;
+        width: 8vh;
+        height: 8vh;
+    }
+    #editBtn {
+        margin: 3.5% ;
+        padding: 3%;
+        font-size: 1.1rem;
+    }
+    #deleteBtn {
+        position: absolute;
+        bottom: 3%;
+        right: 23%;
+        padding: 3%;
+        font-size: 1.1rem;
+    }
+    .noteContainer {
+        margin-top: 7%;
+    }
+    #close {
+        visibility: visible;
+    }
+    .popupContainer {
+        border: none;
+    }
+    .inputLogin {
+        width: 80%;
+    }
+    .submitLogin {
+        margin-top: 4%;
+        /* width: 30%; */
+        padding: 5%;
+        text-align: center;
+    }
+    #fogot {
+        margin-bottom: 2%;
+    }
+    #registerLink {
+        margin-bottom: 2%;
+    }
+}
+
+@media (min-width: 427px) {
+    #newNoteBtn {
+        width: 10vh;
+        height: 10vh;
+    }
+    #editBtn {
+        width: 7vw;
+    }
+    #deleteBtn {
+        width: 7vw;
+    }
+    .submitLogin {
+        height: 4vh;
+        width: 7vw;
+    }
+}
+>>>>>>> a5d7544 (Maui app added)

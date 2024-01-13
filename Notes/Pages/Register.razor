@@ -1,0 +1,92 @@
+﻿@page "/register"
+@inject NavigationManager Navigation;
+@inject RefreshViewState RefreshViewState;
+
+<form id="registerForm" @onsubmit="RegisterM">
+    <div class="loginContainer">
+        <div class="login">
+            <label for="name" class="loginLabel">Login</label><br>
+            <input @bind="UserName" type="text" placeholder="Login" name="name" required class="inputLogin"><br>
+            <label for="password" class="loginLabel">Password</label><br>
+            <input @bind="Password" type="password" placeholder="Password" name="password" required class="inputLogin" id="password"><br>
+            <label for="email" class="loginLabel">Email</label><br>
+            <input @bind="Email" type="email" placeholder="Email" name="email" required class="inputLogin" id="email"><br>
+            <input type="submit" id="submit" value="Register" class="submitLogin"><br>
+            <a href="/login" style="color: white; font-size: 0.7rem; text-decoration: none;">Have account? Let's login</a>
+        </div>
+        <div class="error" id="error">
+            <div class="errorContent">
+                <div id="errorText">
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@code {
+    HttpClient client = new HttpClient();
+    static string appDataPath = FileSystem.Current.AppDataDirectory;
+    static string userPath = Path.Combine(appDataPath, "User.json");
+
+    private string UserName;
+    private string Password;
+    private string Email;
+
+    protected override Task OnInitializedAsync()
+    {
+        RefreshViewState.PropertyChanged += OnPropertyChanged;
+        return base.OnInitializedAsync();
+    }
+
+    private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(RefreshViewState.IsRefreshing) && RefreshViewState.IsRefreshing)
+        {
+            // RefreshPage();
+            RefreshViewState.SetIsRefreshing(false);
+        }
+    }
+
+    public void RegisterM()
+    {
+        UserRegisterRequest request = new UserRegisterRequest()
+        {
+            Name = UserName,
+            Password = Password,
+            Email = Email
+        };
+        Application.Current.MainPage.DisplayAlert("Wait", "Please wait...", "Ok");
+        var url = "https://nazar624.bsite.net/api/User/Create";
+        HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Post, url);
+        message.Content = JsonContent.Create<UserRegisterRequest>(request);
+        HttpResponseMessage response = client.SendAsync(message).Result;
+        string body = response.Content.ReadAsStringAsync().Result;
+
+        var options = new JsonSerializerOptions()
+            {
+                PropertyNameCaseInsensitive = true
+            };
+
+        if (response.IsSuccessStatusCode)
+        {
+            var res = JsonSerializer.Deserialize<User>(body, options);
+            res.Password = request.Password;
+            var resJson = JsonSerializer.Serialize(res);
+            File.WriteAllText(userPath, resJson);
+            Application.Current.MainPage.DisplayAlert("Response", "Registration successfully", "Ok");
+            Navigation.NavigateTo("/", true);
+        }
+        else
+        {
+            var res = JsonSerializer.Deserialize<ErrorModel>(body, options);
+            var values = NormalizeErrorValue(res.value.ToString());
+            //var values = res.value.ToString().Replace("\"", "").Replace("[","").Replace("]", "");
+            Application.Current.MainPage.DisplayAlert("Error", values, "Ok");
+        }
+    }
+
+    public static string NormalizeErrorValue(string errorText)
+    {
+        return errorText.Replace("\"", "").Replace("[", "").Replace("]", "");
+    }
+}

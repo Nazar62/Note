@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    
+    <form id="changeLoginForm">
+        <div class="loginContainer">
+            <div class="login">
+                <label for="login" class="loginLabel">New Login</label><br>
+                <input type="text" placeholder="Login" name="login" required class="inputLogin" ><br>
+                <label for="password" class="loginLabel">Password</label><br>
+                <input type="text" placeholder="Password" name="password" required class="inputLogin"><br>
+                <input type="submit" value="Confirm" class="submitLogin"><br>
+            </div>
+            <div class="error" id="error">
+                <div class="errorContent">
+                    <div id="errorText">
+                        
+                    </div>
+                </div>
+            </div>
+		</div>
+	</form>
+
+    <script src="../js/changeLogin.js"></script>
+</body>
+</html>

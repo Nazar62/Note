@@ -1,0 +1,95 @@
+﻿@page "/changeEmail"
+@inject NavigationManager Navigation
+@inject RefreshViewState RefreshViewState;
+
+<form id="changeEmailForm" @onsubmit="ChangeEmailM">
+    <div class="loginContainer">
+        <div class="login">
+            <label for="email">New Email</label><br>
+            <input @bind="newEmail" placeholder="New Email" type="text" name="email" required class="inputLogin"><br>
+            <label for="password">Password</label><br>
+            <input @bind="pass" type="password" placeholder="Password" name="password" required class="inputLogin"><br>
+            <input type="submit" value="Confirm" class="submitLogin">
+        </div>
+        <div class="error" id="error">
+            <div class="errorContent">
+                <div id="errorText">
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@code {
+    HttpClient client = new HttpClient();
+    static string appDataPath = FileSystem.Current.AppDataDirectory;
+    static string userPath = Path.Combine(appDataPath, "User.json");
+    string newEmail;
+    string pass;
+    User userData;
+
+    protected override Task OnInitializedAsync()
+    {
+        RefreshViewState.PropertyChanged += OnPropertyChanged;
+        return base.OnInitializedAsync();
+    }
+
+    private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(RefreshViewState.IsRefreshing) && RefreshViewState.IsRefreshing)
+        {
+            // RefreshPage();
+            RefreshViewState.SetIsRefreshing(false);
+        }
+    }
+
+    public static string NormalizeErrorValue(string errorText)
+    {
+        return errorText.Replace("\"", "").Replace("[", "").Replace("]", "");
+    }
+
+    public void ChangeEmailM()
+    {
+        userData = JsonSerializer.Deserialize<User>(File.ReadAllText(userPath));
+        if(userData.Password != pass)
+        {
+            Application.Current.MainPage.DisplayAlert("Error", "Password Incorrect", "Ok");
+            return;
+        }
+        var request = new ChangeEmailRequest()
+            {
+                id = userData.Id,
+                NewEmail = newEmail,
+                Password = pass
+            };
+        var url = $"https://nazar624.bsite.net/api/User/change-email";
+        HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Post, url);
+        message.Content = JsonContent.Create<ChangeEmailRequest>(request);
+        HttpResponseMessage response = client.SendAsync(message).Result;
+        string body = response.Content.ReadAsStringAsync().Result;
+
+        var options = new JsonSerializerOptions()
+            {
+                PropertyNameCaseInsensitive = true
+            };
+
+        if (response.IsSuccessStatusCode)
+        {
+            Application.Current.MainPage.DisplayAlert("Response", "Check email and confirm then login again", "Ok");
+            File.Delete(userPath);
+            Navigation.NavigateTo("/login");
+        }
+        else
+        {
+            //var values = res.value.ToString().Replace("\"", "").Replace("[","").Replace("]", "");
+            if(response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
+            {
+                Application.Current.MainPage.DisplayAlert("Error", "Try Again!", "Ok");
+            } else {
+                Application.Current.MainPage.DisplayAlert("Error", "Email alredy used!", "Ok");
+                Application.Current.MainPage.DisplayAlert("Error", body, "Ok");
+                
+            }
+        }
+    }
+}

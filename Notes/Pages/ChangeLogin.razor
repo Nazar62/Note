@@ -1,0 +1,82 @@
+﻿@page "/changeLogin"
+@inject NavigationManager Navigation;
+@inject RefreshViewState RefreshViewState;
+
+<form id="changeLoginForm" @onsubmit="ChangeLoginM">
+    <div class="loginContainer">
+        <div class="login">
+            <label for="login" class="loginLabel">New Login</label><br>
+            <input @bind="newLogin" type="text" placeholder="Login" name="login" required class="inputLogin"><br>
+            <input type="submit" value="Confirm" class="submitLogin"><br>
+        </div>
+        <div class="error" id="error">
+            <div class="errorContent">
+                <div id="errorText">
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@code {
+
+    HttpClient client = new HttpClient();
+    static string appDataPath = FileSystem.Current.AppDataDirectory;
+    static string userPath = Path.Combine(appDataPath, "User.json");
+    string newLogin;
+    User userData;
+
+    protected override Task OnInitializedAsync()
+    {
+        RefreshViewState.PropertyChanged += OnPropertyChanged;
+        return base.OnInitializedAsync();
+    }
+
+    private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(RefreshViewState.IsRefreshing) && RefreshViewState.IsRefreshing)
+        {
+            // RefreshPage();
+            RefreshViewState.SetIsRefreshing(false);
+        }
+    }
+
+    public static string NormalizeErrorValue(string errorText)
+    {
+        return errorText.Replace("\"", "").Replace("[", "").Replace("]", "");
+    }
+
+    public void ChangeLoginM()
+    {
+        userData = JsonSerializer.Deserialize<User>(File.ReadAllText(userPath));
+        var request = new ChangeLoginRequest()
+            {
+                OldName = userData.Name,
+                NewName = newLogin,
+                Password = userData.Password
+            };
+        var url = $"https://nazar624.bsite.net/api/User/change-userName";
+        HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Post, url);
+        message.Content = JsonContent.Create<ChangeLoginRequest>(request);
+        HttpResponseMessage response = client.SendAsync(message).Result;
+        string body = response.Content.ReadAsStringAsync().Result;
+
+        var options = new JsonSerializerOptions()
+            {
+                PropertyNameCaseInsensitive = true
+            };
+
+        if (response.IsSuccessStatusCode)
+        {
+            Application.Current.MainPage.DisplayAlert("Response", "Check email and confirm", "Ok");
+            userData.Name = newLogin as string;
+            File.WriteAllText(userPath, JsonSerializer.Serialize(userData));
+            Navigation.NavigateTo("/login");
+        }
+        else
+        {
+            //var values = res.value.ToString().Replace("\"", "").Replace("[","").Replace("]", "");
+            Application.Current.MainPage.DisplayAlert("Error", "Login alredy used!", "Ok");
+        }
+    }
+}

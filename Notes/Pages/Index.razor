@@ -1,0 +1,571 @@
+﻿@page "/"
+@using Notes.States
+@using System.ComponentModel
+@inject NavigationManager Navigation;
+@inject RefreshViewState RefreshViewState;
+@if(popupOpen == "open")
+{
+    <style>
+
+        body{
+            overflow: hidden;
+        }
+
+    </style>
+}
+
+    <header id="header" @onload="GetNotes">
+    <div class="Refresh hand" @onclick="RefreshPage">Notes</div>
+        <div id="userNameDiv" @onclick="ShowMenu" >@userData.Name</div>
+    </header>
+    <div id="userMenu" class="userMenu" style="transform: translate(0px , @TranslatedUserMenu)">
+        <a href="/changeLogin" id="changeLogin" class="a">Change login</a> <br>
+        <a href="/changeEmail" id="changeEmail" class="a">Change Email</a> <br>
+        <div @onclick="DeleteUser" id="deleteUser" style="color:red;" class="hand">Delete user</div>
+        <div @onclick="LogOut" id="LogOut" style="color:red;" class="hand">Log out</div>
+    </div>
+    <div class="noteContainer" id="noteContainer">
+    @foreach(var note in Notes)
+    {
+        <h3 class="title hand" id="@note.Id" @onclick="@(() => TitleClick(note.Id))">@note.Title</h3>
+        <div class="noteDescription" id="@(note.Id.ToString() + 'd')">${note.Description}</div>
+    }
+</div>
+    <div id="newNoteBtn" @onclick="CreateNote">+</div>
+<div class="popup @popupOpen" id="popup" >
+    <div class="popupBg" @onclick="PopupClose"></div>
+        <div id="close" @onclick="PopupClose">+</div>
+        <div class="popupContainer popupContent">
+            <div class="popupInputs popupContent">
+                <div class="popupTitle popupContent">
+                <input @bind="popupTitle" type="text" placeholder="Title" id="popupTitle" readonly="@popupReadOnly">
+                </div>
+                <div class="popupDescription popupContent">
+                    <textarea @bind="popupDescription" id="popupDescription" placeholder="Description" readonly="@popupReadOnly"></textarea>
+                </div>
+            </div>
+            <div id="editBtn" @onclick="EditNote" >@EditValue</div>
+            <div id="deleteBtn" @onclick="DeleteNote" style="visibility: @DeleteVisibility">Delete</div>
+        </div>
+    </div>
+    <div class="error" id="error">
+        <div class="errorContent">
+            <div id="errorText">
+                
+            </div>
+        </div>
+    </div>
+
+@* <SurveyPrompt Title="How is Blazor working for you?" /> *@
+@code {
+    User userData = new User() { Name = "", Password = "", Email = "", Id = 0};
+    static string appDataPath = FileSystem.Current.AppDataDirectory;
+    static string userPath = Path.Combine(appDataPath, "User.json");
+    static string notesPath = Path.Combine(appDataPath, "Notes.json");
+    HttpClient client = new HttpClient();
+    int lastClickedNoteId;
+    private List<NotesSave> Notes = new List<NotesSave>();
+
+    public void RefreshPage()
+    {
+        Navigation.NavigateTo("/", true);
+    }
+
+
+    #region Popup
+    private string? popupTitle;
+    private string? popupDescription;
+    public string popupOpen;
+    public bool IsEdit = false;
+    public string EditValue = "Edit";
+    private bool popupReadOnly = true;
+    private string DeleteVisibility = "visible";
+
+    private void TitleClick(int id)
+    {
+        lastClickedNoteId = id;
+        var gettedNote = Notes.Where(n => n.Id == id).FirstOrDefault();
+        popupTitle = gettedNote.Title;
+        popupDescription = gettedNote.Description;
+        popupOpen = "open";
+    }
+    private void PopupClose()
+    {
+        popupOpen = " ";
+        popupReadOnly = true;
+        EditValue = "Edit";
+        IsEdit = false;
+
+    }
+    private void DeleteNote()
+    {
+        var gettedNote = Notes.Where(n => n.Id == lastClickedNoteId).FirstOrDefault();
+        var note = NotesSaveToNote(gettedNote);
+        if (Connectivity.NetworkAccess == NetworkAccess.None || Connectivity.NetworkAccess == NetworkAccess.Local || Connectivity.NetworkAccess == NetworkAccess.Unknown)
+        {
+            var index = Notes.IndexOf(gettedNote);
+            if (gettedNote.CreatedOffline != true)
+            {
+                gettedNote.DeleteOffline = true;
+                Notes[index] = gettedNote;
+                File.WriteAllText(notesPath, JsonSerializer.Serialize(Notes));
+                Navigation.NavigateTo("/", true);
+            }
+            else
+            {
+                Notes.Remove(gettedNote);
+                File.WriteAllText(notesPath, JsonSerializer.Serialize(Notes));
+                Navigation.NavigateTo("/", true);
+            }
+        }
+        else
+        {
+            // Application.Current.MainPage.DisplayAlert("Ok", Connectivity.NetworkAccess.ToString(), "Ok");
+            var url = $"https://nazar624.bsite.net/api/Notes/{note.Id}";
+            HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Delete, url);
+            message.Content = JsonContent.Create(note);
+            HttpResponseMessage response = client.SendAsync(message).Result;
+            if (response.IsSuccessStatusCode)
+            {
+                Application.Current.MainPage.DisplayAlert("Result", "Deleteted Successfully", "Ok");
+                Navigation.NavigateTo("/", true);
+            }
+            else
+            {
+                string content = response.Content.ReadAsStringAsync().Result;
+                object cont = JsonSerializer.Deserialize<object>(content);
+                Application.Current.MainPage.DisplayAlert("Error", "Error Try Again", "Ok");
+            }
+        }
+    }
+    private void EditNote()
+    {
+        if (!IsEdit)
+        {
+            if (EditValue != "Save")
+            {
+                EditValue = "Save";
+                popupReadOnly = false;
+                IsEdit = true;
+            }
+            else
+            {
+                var note = new Note()
+                    {
+                        Id = 0,
+                        UserId = userData.Id,
+                        Title = popupTitle,
+                        Description = popupDescription
+                    };
+                if (Connectivity.NetworkAccess == NetworkAccess.None || Connectivity.NetworkAccess == NetworkAccess.Local || Connectivity.NetworkAccess == NetworkAccess.Unknown)
+                {
+                    if (File.Exists(notesPath) && Notes.Count != 0)
+                    {
+                        var maxId = Notes.Max(n => n.Id);
+                        note.Id = maxId + 1;
+                        var saved = new NotesSave()
+                            {
+                                Id = note.Id,
+                                UserId = note.UserId,
+                                Title = note.Title,
+                                Description = note.Description,
+                                CreatedOffline = true,
+                                UpdatedOffline = false,
+                                DeleteOffline = false
+                            };
+                        Notes.Add(saved);
+                        var jsonNotes = JsonSerializer.Serialize(Notes);
+                        File.WriteAllText(notesPath, jsonNotes);
+                        Navigation.NavigateTo("/", true);
+                    }
+                    else
+                    {
+                        var list = new List<NotesSave>();
+                        var no = NoteToNotesSave(note);
+                        no.CreatedOffline = true;
+                        list.Add(no);
+                        var notes = JsonSerializer.Serialize(list);
+                        File.WriteAllText(notesPath, notes);
+                        Navigation.NavigateTo("/", true);
+                    }
+                }
+                else
+                {
+                    var url = "https://nazar624.bsite.net/api/Notes/CreateNote";
+                    HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Post, url);
+                    message.Content = JsonContent.Create(note);
+                    HttpResponseMessage response = client.SendAsync(message).Result;
+                    if (response.IsSuccessStatusCode)
+                    {
+                        Application.Current.MainPage.DisplayAlert("Create", "Create successful", "Ok");
+                        popupReadOnly = true;
+                        Navigation.NavigateTo("/", true);
+                    }
+                    else
+                    {
+                        Application.Current.MainPage.DisplayAlert("Error", "Error creating please try again (If your account not verified check email and verify account)", "Ok");
+                    }
+                }
+            }
+        }
+        else
+        {
+            if (Connectivity.NetworkAccess == NetworkAccess.None || Connectivity.NetworkAccess == NetworkAccess.Local || Connectivity.NetworkAccess == NetworkAccess.Unknown)
+            {
+                var note = new Note()
+                    {
+                        Id = lastClickedNoteId,
+                        UserId = userData.Id,
+                        Title = popupTitle,
+                        Description = popupDescription
+                    };
+                if (File.Exists(notesPath))
+                {
+                    //Note note = not as Note;
+                    var gettedNote = Notes.Where(n => n.Id == note.Id).FirstOrDefault();
+                    var noteIndex = Notes.IndexOf(gettedNote);
+                    if(gettedNote.CreatedOffline == false)
+                    {
+                        Notes[noteIndex] = new NotesSave()
+                        {
+                            Id = note.Id,
+                            UserId = note.UserId,
+                            Title = note.Title,
+                            Description = note.Description,
+                            CreatedOffline = gettedNote.CreatedOffline,
+                            UpdatedOffline = true,
+                            DeleteOffline = gettedNote.DeleteOffline
+                        };
+                    } else
+                    {
+                        Notes[noteIndex] = new NotesSave()
+                            {
+                                Id = note.Id,
+                                UserId = note.UserId,
+                                Title = note.Title,
+                                Description = note.Description,
+                                CreatedOffline = gettedNote.CreatedOffline,
+                                UpdatedOffline = false,
+                                DeleteOffline = gettedNote.DeleteOffline
+                            };
+                    }
+                    var jsonNotes = JsonSerializer.Serialize(Notes);
+                    File.WriteAllText(notesPath, jsonNotes);
+                    Navigation.NavigateTo("/", true);    
+                }
+            }
+            else
+            {
+                var note = new Note()
+                    {
+                        Id = lastClickedNoteId,
+                        UserId = userData.Id,
+                        Title = popupTitle,
+                        Description = popupDescription
+                    };
+
+                var url = $"https://nazar624.bsite.net/api/Notes/updateNote/{note.Id}";
+                HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Put, url);
+                message.Content = JsonContent.Create(note);
+                HttpResponseMessage response = client.SendAsync(message).Result;
+                if (response.IsSuccessStatusCode)
+                {
+                    Application.Current.MainPage.DisplayAlert("Edit", "Edited Successfuly", "Ok");
+                    popupReadOnly = true;
+                    Navigation.NavigateTo("/", true);
+                }
+                else
+                {
+                    Application.Current.MainPage.DisplayAlert("Error", "Edit not success please try again", "Ok");
+                }
+
+                EditValue = "Edit";
+            }
+        }
+    }
+    #endregion
+    #region GetNotes&Sync
+    protected override Task OnInitializedAsync()
+    {
+        GetNotes();
+        RefreshViewState.PropertyChanged += OnPropertyChanged;
+        return base.OnInitializedAsync();
+    }
+
+    private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if(e.PropertyName == nameof(RefreshViewState.IsRefreshing) && RefreshViewState.IsRefreshing)
+        {
+            RefreshPage();
+            RefreshViewState.SetIsRefreshing(false);
+        }
+    }
+
+    public void GetNotes()
+    {
+        if (!File.Exists(userPath))
+        {
+            Navigation.NavigateTo("/login");
+        }
+        else
+        {
+            Connectivity.ConnectivityChanged += Connectivity_ConnectivityChanged;
+            userData = JsonSerializer.Deserialize<User>(File.ReadAllText(userPath), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+            //List<Note> desed;
+            if (Connectivity.NetworkAccess == NetworkAccess.None || Connectivity.NetworkAccess == NetworkAccess.Local || Connectivity.NetworkAccess == NetworkAccess.Unknown)
+            {
+                Application.Current.MainPage.DisplayAlert("No Internet!", "No Internet connection notes can't sync!", "Ok");
+                if (File.Exists(notesPath))
+                {
+                    var r = JsonSerializer.Deserialize<List<NotesSave>>(File.ReadAllText(notesPath));
+                    Notes = r.Where(n => n.DeleteOffline == false).ToList();
+                }
+            }
+            else
+            {
+                var url = new Uri($"https://nazar624.bsite.net/api/Notes/GetUserNotes/{userData.Id}/{userData.Password}");
+                var response = client.GetAsync(url).Result;
+                var content = response.Content.ReadAsStringAsync().Result;
+                if (response.IsSuccessStatusCode)
+                {
+                    var notes = JsonSerializer.Deserialize<List<Note>>(content, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    Notes = NoteToNotesSave(notes);
+                    if (File.Exists(notesPath))
+                    {
+                        var notess = JsonSerializer.Deserialize<List<NotesSave>>(File.ReadAllText(notesPath));
+                        if (notess.Any(n => n.CreatedOffline == true) || notess.Any(n => n.UpdatedOffline == true) || notess.Any(n => n.DeleteOffline == true))
+                        {
+                            Sync();
+                            Navigation.NavigateTo("/", true);
+                        }
+                        else if (Notes != notess)
+                        {
+                            File.WriteAllText(notesPath, JsonSerializer.Serialize(Notes));
+                        }
+
+                    }
+                    else
+                    {
+                        var jsonNotes = JsonSerializer.Serialize(Notes);
+                        File.WriteAllText(notesPath, jsonNotes);
+                    }
+                }
+                else
+                {
+                    var error = JsonSerializer.Deserialize<ErrorModel>(content);
+                    var errorTesxt = NormalizeErrorValue(error.value.ToString());
+                    Application.Current.MainPage.DisplayAlert("Error", errorTesxt, "Ok");
+                    if (errorTesxt == "Password changed")
+                    {
+                        File.Delete(userPath);
+                        Navigation.NavigateTo("/login");
+                    } else if(response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                    {
+                        File.Delete(userPath);
+                        Application.Current.MainPage.DisplayAlert("User deleted", "User Deleted Create new one or login", "Ok");
+                    }
+                }
+            }
+        }
+    }
+    private void Connectivity_ConnectivityChanged(object sender, ConnectivityChangedEventArgs e)
+    {
+        if (Connectivity.NetworkAccess == NetworkAccess.None || Connectivity.NetworkAccess == NetworkAccess.Local || Connectivity.NetworkAccess == NetworkAccess.Unknown)
+        {
+            Navigation.NavigateTo("/", true);
+            try
+            {
+                Sync();
+            } catch
+            {
+
+            }
+        }
+        if (Connectivity.NetworkAccess == NetworkAccess.Internet)
+        {
+            Navigation.NavigateTo("/", true);
+            Sync();
+        }
+    }
+    public void Sync()
+    {
+        var notes = JsonSerializer.Deserialize<List<NotesSave>>(File.ReadAllText(notesPath));
+        if (notes.Any(n => n.CreatedOffline == true))
+        {
+            var cr = NotesSaveToNote(notes.Where(n => n.CreatedOffline == true).ToList());
+            foreach (var note in cr)
+            {
+                note.UserId = userData.Id;
+                note.Id = 0;
+                var url = "https://nazar624.bsite.net/api/Notes/CreateNote";
+                HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Post, url);
+                message.Content = JsonContent.Create(note);
+                HttpResponseMessage response = client.SendAsync(message).Result;
+            }
+        }
+        if (notes.Any(n => n.UpdatedOffline == true))
+        {
+            var upd = NotesSaveToNote(notes.Where(n => n.UpdatedOffline == true).ToList());
+            foreach (var note in upd)
+            {
+                var url = $"https://nazar624.bsite.net/api/Notes/updateNote/{note.Id}";
+                HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Put, url);
+                message.Content = JsonContent.Create(note);
+                HttpResponseMessage response = client.SendAsync(message).Result;
+            }
+        }
+        if (notes.Any(n => n.DeleteOffline == true))
+        {
+            var del = NotesSaveToNote(notes.Where(n => n.DeleteOffline == true).ToList());
+            foreach (var note in del)
+            {
+                var url = $"https://nazar624.bsite.net/api/Notes/{note.Id}";
+                HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Delete, url);
+                message.Content = JsonContent.Create(note);
+                HttpResponseMessage response = client.SendAsync(message).Result;
+            }
+        }
+        var ns = notes.Select(note => new NotesSave
+            {
+                Id = note.Id,
+                Title = note.Title,
+                UserId = note.UserId,
+                Description = note.Description,
+                CreatedOffline = false,
+                UpdatedOffline = false,
+                DeleteOffline = false
+            });
+        File.WriteAllText(notesPath, JsonSerializer.Serialize(ns));
+    }
+
+    public static List<NotesSave> NoteToNotesSave(List<Note> notes)
+    {
+        var noteSaveList = notes.Select(note => new NotesSave
+            {
+                Id = note.Id,
+                UserId = note.UserId,
+                Title = note.Title,
+                Description = note.Description,
+                CreatedOffline = false,
+                UpdatedOffline = false,
+                DeleteOffline = false
+            }).ToList();
+        return noteSaveList;
+    }
+    public static List<Note> NotesSaveToNote(List<NotesSave> notesSave)
+    {
+        var noteList = notesSave.Select(note => new Note
+            {
+                Id = note.Id,
+                UserId = note.UserId,
+                Title = note.Title,
+                Description = note.Description
+            }).ToList();
+        return noteList;
+    }
+
+    public static NotesSave NoteToNotesSave(Note note)
+    {
+        var noteSaveList = new NotesSave
+            {
+                Id = note.Id,
+                UserId = note.UserId,
+                Title = note.Title,
+                Description = note.Description,
+                CreatedOffline = false,
+                UpdatedOffline = false,
+                DeleteOffline = false
+            };
+        return noteSaveList;
+    }
+    public static Note NotesSaveToNote(NotesSave note)
+    {
+        var noteList = new Note
+            {
+                Id = note.Id,
+                UserId = note.UserId,
+                Title = note.Title,
+                Description = note.Description
+            };
+        return noteList;
+    }
+
+    private void CreateNote()
+    {
+        popupOpen = "open";
+        popupReadOnly = false;
+        popupTitle = "";
+        popupDescription = "";
+        IsEdit = false;
+        EditValue = "Save";
+    }
+    #endregion
+    #region UserMenu
+    private bool MenuShowed = false;
+    public string TranslatedUserMenu = "-200%";
+    private void ShowMenu()
+    {
+        if (Connectivity.NetworkAccess == NetworkAccess.None || Connectivity.NetworkAccess == NetworkAccess.Local || Connectivity.NetworkAccess == NetworkAccess.Unknown)
+        {
+
+        }
+        else
+        {
+        if(MenuShowed == false)
+        {
+            MenuShowed = true;
+            TranslatedUserMenu = "0px";
+        } else
+        {
+            MenuShowed = false;
+            TranslatedUserMenu = "-200%";
+        }    
+        }
+    }
+    private void LogOut()
+    {
+        File.Delete(userPath);
+        Navigation.NavigateTo("/", true);
+    }
+    public async void DeleteUser()
+    {
+        bool result = await Application.Current.MainPage.DisplayAlert("Delete User", "Are you sure?", "Yes", "No");
+        if (result)
+        {
+            var url = $"https://nazar624.bsite.net/api/User/delete/{userData.Id}";
+            var request = new UserLoginRequest()
+                {
+                    Name = userData.Name,
+                    Password = userData.Password
+                };
+            HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Delete, url);
+            message.Content = JsonContent.Create<UserLoginRequest>(request);
+            HttpResponseMessage response = client.SendAsync(message).Result;
+            string body = response.Content.ReadAsStringAsync().Result;
+
+            var options = new JsonSerializerOptions()
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+
+            if (response.IsSuccessStatusCode)
+            {
+                Application.Current.MainPage.DisplayAlert("Response", "Deleted Successfully", "Ok");
+                Navigation.NavigateTo("/login", true);
+                File.Delete(userPath);
+            }
+            else
+            {
+                var res = JsonSerializer.Deserialize<ErrorModel>(body, options);
+                var values = NormalizeErrorValue(res.value.ToString());
+                //var values = res.value.ToString().Replace("\"", "").Replace("[","").Replace("]", "");
+                Application.Current.MainPage.DisplayAlert("Error", values, "Ok");
+            }
+        }
+    }
+    #endregion
+    public static string NormalizeErrorValue(string errorText)
+    {
+        return errorText.Replace("\"", "").Replace("[", "").Replace("]", "");
+    }
+}

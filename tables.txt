@@ -1,0 +1,19 @@
+CREATE TABLE [dbo].[Notes] (
+    [Id]          INT            IDENTITY (1, 1) NOT NULL,
+    [UserId]      INT            NOT NULL,
+    [Title]       NVARCHAR (MAX) NOT NULL,
+    [Description] NVARCHAR (MAX) NULL
+);
+
+
+CREATE TABLE [dbo].[Users] (
+    [Id]                INT            IDENTITY (1, 1) NOT NULL,
+    [Name]              NVARCHAR (MAX) NOT NULL,
+    [Password]          NVARCHAR (MAX) NOT NULL,
+    [Email]             NVARCHAR (MAX) NOT NULL,
+    [VerificationToken] NVARCHAR (MAX) NULL,
+    [VerificatedAt]     DATETIME       NULL,
+    [ResetToken]        NVARCHAR (MAX) NULL,
+    [ResetTokenExpires] DATETIME       NULL,
+    [ResetConfirmed]    BIT            NULL
+); 
