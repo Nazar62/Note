@@ -8,16 +8,15 @@
 </head>
 <body>
     <header id="header">
+        <div class="Brand">Notes</div>
+        <input type="text" placeholder="Search" id="search">
         <div id="userNameDiv"></div>
     </header>
     <div id="userMenu" class="userMenu">
         <a href="html/changeLogin.html" id="changeLogin" class="a">Change login</a> <br>
         <a href="html/changeEmail.html" id="changeEmail" class="a">Change Email</a> <br>
-<<<<<<< HEAD
-=======
         <a href="https://drive.google.com/file/d/1v0XZ0c6WG55TqV_6wMagPilasVMVCdjt/view?usp=sharing" class="a">Get Desktop app</a><br>
         <a href="https://drive.google.com/file/d/1mBbJKiEP2PnLlFttQB9yqJSJGParvBi4/view?usp=sharing" class="a">Get Mobile app</a>
->>>>>>> a5d7544 (Maui app added)
         <div id="deleteUser" style="color:red;" class="hand">Delete user</div>
         <div id="LogOut" style="color:red;" class="hand">Log out</div>
     </div>
@@ -26,15 +25,6 @@
     </div>
     <div id="newNoteBtn">+</div>
     <div class="popup" id="popup">
-<<<<<<< HEAD
-        <div class="popupContainer popupContent">
-            <div class="popupInputs popupContent">
-                <div class="popupTitle popupContent">
-                    <input type="text" id="popupTitle" value="title" readonly>
-                </div>
-                <div class="popupDescription popupContent">
-                    <textarea id="popupDescription" readonly></textarea>
-=======
         <div id="close">+</div>
         <div class="popupContainer popupContent">
             <div class="popupInputs popupContent">
@@ -43,7 +33,6 @@
                 </div>
                 <div class="popupDescription popupContent">
                     <textarea id="popupDescription" placeholder="Description" readonly></textarea>
->>>>>>> a5d7544 (Maui app added)
                 </div>
             </div>
             <div id="editBtn">Edit</div>
@@ -65,12 +54,9 @@
 } else {
     window.location.href = "../html/login.html"
 }
-<<<<<<< HEAD
-=======
 if(getCookie('userId') == null) {
     window.location.href = "../html/login.html"
 }
->>>>>>> a5d7544 (Maui app added)
     </script>
 </body>
 </html>
